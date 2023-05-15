@@ -1,0 +1,233 @@
+from datetime import date
+
+# Patient dict used to store and retrieve patient info using dob as key and patient object as value
+patient_dict = dict()
+user_names = {"Brhan1": "123"}
+
+class Patient:
+  """
+  including emergency contact information, comorbidities, reason for admission, and any medications taken
+  """
+
+  """Define class variables including risky medications and acute conditions which are considered in the program"""
+
+  risky_meds = ["Blood Thinners", "Immunosuppressants", "Chemotherapy", "Glycemic Agents"]
+  risky_conds = ["Stroke", "Cardiac Arrest", "DKA", "Traumatic Injury", "Septic Shock", "Drug Overdose", "Giving Birth"]
+  risky_com = ["Immunocompromised", "Diabetes", "Heart Disease", "Cancer", "Dementia", "Pregnant"]
+
+  """ Initialize instance attributes"""
+
+  def __init__(self, name, dob, admin_reason):
+    self.name = name
+    self.dob = dob
+    self.comorbidity = []
+    self.medication = []
+    self.admin_reason = admin_reason
+
+  """Define find age function which computes the age of the patient given their dob"""
+  # input = '11/06/1981'
+  def find_age(self):
+    today = str(date.today()).split("-")
+    patient_dob = self.dob.split("/")
+    patient_age = int(today[0]) - int(patient_dob[2])
+    return patient_age
+
+
+  """ Assigns the patient a risk score which is calculated depending on their comprbidities, medications taken, age, etc"""
+  def risk_score(self):
+    risk_score = 0
+    if len(self.comorbidity) == 0:
+      pass
+    elif len(self.comorbidity) == 1:
+      if self.comorbidity[0] in Patient.risky_com:
+        risk_score += 1
+      risk_score += 0.5
+    else:
+      for cond in self.comorbidity:
+        if cond in Patient.risky_com:
+          risk_score += 1
+        else:
+          risk_score += 0.5
+         #
+    if len(self.medication) == 0:
+      pass
+    elif len(self.medication) == 1:
+      if self.medication[0] in Patient.risky_meds:
+        risk_score += 1
+    else:
+      for med in self.medication:
+        if med in Patient.risky_meds:
+          risk_score += 1
+           #
+    age = self.find_age()
+
+    if age > 70 or age < 1:
+      risk_score += 0.5
+
+    if self.admin_reason in Patient.risky_conds:
+      risk_score += 2
+
+    if risk_score > 3:
+      print("Admit into ICU. ")
+
+    return risk_score
+
+  # Function below stores patient information onto file
+
+  def store_patient(self):
+    wf = open("data.txt", "a")
+    wf.write("\n" + "Patient DOB: " + self.dob)
+    wf.write("\n" + "Patient name: " + self.name)
+    wf.write("\n" + "Patient age: " + str(self.find_age()))
+    wf.write("\n" + "Patient risk score: " + str(self.risk_score()) + "\n")
+    wf.write("\n" + "Reason for admission: " + str(self.admin_reason) + "\n")
+    wf.write("------------------------------------")
+    wf.close()
+
+
+def create_user(dict):
+  user_name = input("Enter new username: ")
+  password = input("Enter new password: ")
+  dict[user_name] = password
+
+
+def check_user(dict):
+  print("Please enter login information")
+  username = input("Enter username: ")
+  password = input("Enter password: ")
+  user_choice = ""
+  while user_choice != "NO":
+    if username in dict.keys() and password in dict.values():
+        break
+    else:
+      print("Invalid Username or Password")
+      user_choice = input("Would you like to try again?: ").upper()
+      print("Please enter login information")
+      username = input("Enter username: ")
+      password = input("Enter password: ")
+
+# function below creates patient object based on user input
+
+def create_patient():
+  patient_name = input("Please enter patient name: ")
+  patient_dob = input("Please enter patient DOB: ")
+  patient_condition = input("Please enter patient condition: ")
+  new_admin = Patient(patient_name, patient_dob, patient_condition)
+  new_admin_age = new_admin.find_age()
+  print("Patient is:", new_admin_age)
+  risk_assessment = new_admin.risk_score()
+  print("Patient risk assessment is: ", risk_assessment)
+  #new_admin.store_patient()
+  patient_dict[patient_dob] = new_admin
+
+  answer = input("Is any other information available?: ").upper()
+  if answer == "YES":
+    print('Which of the following is available: ')
+    print("A. Comorbidity")
+    print("B. Medications")
+    print("C. Both")
+    user_input = input("Enter choice: ")
+    if user_input == 'A':
+      coms = input("What are the comorbidities present? (Separate with comma):")
+      coms_list = coms.split(",")
+      patient_dict[patient_dob].comorbidity = coms_list
+    elif user_input == 'B':
+      meds = input("What are the medications being taken? (Separate with comma):")
+      meds_list = meds.split(",")
+      patient_dict[patient_dob].medication = meds_list
+    else:
+      coms = input("What are the comorbidities present? (Separate with comma):")
+      coms_list = coms.split(",")
+      meds = input("What are the medications being taken? (Separate with comma):")
+      meds_list = meds.split(",")
+      patient_dict[patient_dob].comorbidity = coms_list
+      patient_dict[patient_dob].medication = meds_list
+    new_admin.store_patient()
+
+
+
+# Function below updates patient information based on user input
+
+def update_patient():
+  patient_dob = input("Please enter patient DOB: ")
+  if patient_dob in patient_dict.keys():
+    print("Patient: " + patient_dict[patient_dob].name)
+    print("What would you like to update?: ")
+    print("A. Comorbidity")
+    print("B. Medications")
+    print("C. Both")
+    update_choice = input("Enter choice: ").upper()
+
+    if update_choice == 'A':
+      coms = input("What are the comorbidities present? (Separate with comma):")
+      coms_list = coms.split(",")
+      patient_dict[patient_dob].comorbidity.append(coms_list)
+    elif update_choice == 'B':
+      meds = input("What are the medications being taken? (Separate with comma):")
+      meds_list = meds.split(",")
+      patient_dict[patient_dob].medication.append(meds_list)
+    else:
+      coms = input("What are the comorbidities present? (Separate with comma):")
+      coms_list = coms.split(",")
+      meds = input("What are the medications being taken? (Separate with comma):")
+      meds_list = meds.split(",")
+      patient_dict[patient_dob].comorbidity.append(coms_list)
+      patient_dict[patient_dob].medication.append(meds_list)
+  else:
+    print("Patient not in system.")
+    user_choice = input("Would you like to enter another dob?: ").upper()
+    if user_choice == "YES":
+      update_patient()
+
+def display_patient():
+  dob = input("Please enter patient dob: ")
+  if dob in patient_dict.keys():
+    print(patient_dict[dob].name)
+    print(patient_dict[dob].dob)
+    print(patient_dict[dob].comorbidity)
+    print(patient_dict[dob].medication)
+    print(patient_dict[dob].risk_score())
+
+  else:
+    print("Patient not in database. ")
+
+is_user = input("Are you a current user?: ").upper()
+
+if is_user == "YES":
+  check_user(user_names)
+else:
+  create_user(user_names)
+  check_user(user_names)
+
+
+
+print("Welcome to EasyAdmit.")
+print("Would you like to: ")
+print("A. Enter a new admission.")
+print("B. Update an existing patient's information.")
+print("C. View existing patient's information.")
+
+user_choice = input("Enter choice: ").upper()
+
+cont = ""
+while cont != "NO":
+  if user_choice == 'A':
+    create_patient()
+
+  elif user_choice == 'B':
+    update_patient()
+
+  elif user_choice == "C":
+    display_patient()
+
+  else:
+    print("Error: Invalid input.")
+
+  cont = input("Would you like to continue?: ").upper()
+  if cont == "NO":
+    break
+  print("Would you like to: ")
+  print("A. Enter a new admission.")
+  print("B. Update an existing patient's information.")
+  print("C. View current patient information.")
+  user_choice = input("Enter choice: ").upper()
